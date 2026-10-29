@@ -6,4 +6,6 @@ One entry per day: what I built, what I learned, what is still unclear.
 
 - Built: created the repo and project skeleton.
 - Learned: project plan and stack (React, FastAPI, PostgreSQL).
-- Unclear: nothing yet.
+- 404 and 422 errors: 404 - the thing you asked for does not exist, 422 - bad input
+- --reload: reloads each time when changes happens in code
+- GET and POST
