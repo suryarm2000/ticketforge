@@ -25,3 +25,12 @@ One entry per day: what I built, what I learned, what is still unclear.
   - date is just text, so "31-10-2026" and "2026-12-01" are both accepted. Need a real date type.
   - Negative prices are accepted.
   - Data lives in a Python list, so it is lost when the server restarts. This is why I need a database.
+
+  ## 2026-11-06 (Day 3)
+
+- Pydantic model describes the shape of the data (which field exists and their types)
+- model_dump() converts a pydantic object into a normal python dictionary 
+- A database’s auto-increment counter only goes up, so ids are never reused even after deletes.
+- Added delete endpoint which has status code 204 - which means no content but request is success
+- datetime.data is YYYY-MM-DD format
+- model_dump(mode="json") tells pydantic to covert special data types into a JSON friendly values so that the date becomes a string

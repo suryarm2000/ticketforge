@@ -1,13 +1,14 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+import datetime
 
 app = FastAPI()
 
 class EventCreate(BaseModel):
-    title: str
-    venue: str
-    date: str
-    price: float
+    title: str = Field(min_length=1)
+    venue: str = Field(min_length=1)
+    date: datetime.date
+    price: float = Field(gt=0)
 
 events = [{"id": 1,
            "title": "event1",
@@ -44,7 +45,7 @@ def get_event(event_id: int):
 def create_event(event: EventCreate):
     ids = [e["id"] for e in events]
     new_id = max(ids, default=0) + 1
-    new_event = {"id": new_id, **event.model_dump()}
+    new_event = {"id": new_id, **event.model_dump(mode="json")}
     events.append(new_event)
     return new_event
 
@@ -52,7 +53,15 @@ def create_event(event: EventCreate):
 def update_event(event_id: int, event: EventCreate):
     for index, existing in enumerate(events):
         if existing["id"] == event_id:
-            updated = {"id": event_id, **event.model_dump()}
+            updated = {"id": event_id, **event.model_dump(mode="json")}
             events[index] = updated
             return updated
+    raise HTTPException(status_code=404, detail="Event not found")
+
+@app.delete("/events/{event_id}", status_code=204)
+def delete_event(event_id: int):
+    for index, existing in enumerate(events):
+        if existing["id"] == event_id:
+            events.pop(index)
+            return
     raise HTTPException(status_code=404, detail="Event not found")
