@@ -44,9 +44,26 @@ One entry per day: what I built, what I learned, what is still unclear.
 - f-string: f"/events/{event_id}" puts the variable's value into the text.
 - AttributeError: the object has no such method/value. My bug was client.update(...) instead of client.put(...). Reading the last line of pytest's failure output pointed straight at it.
 - 3 tests pass: full create/get/update/delete lifecycle, bad price gives 422, unknown event gives 404.
-- Phase 2 concepts (read, not built yet): a database stores data on disk so it survives restarts. Table = list of similar records, row = one record, column = one field with a type, primary key = unique id per row. SQL is the language to query it: SELECT, INSERT, UPDATE, DELETE match GET, POST, PUT, DELETE.
-- Docker: runs programs in isolated containers made from images. A volume keeps data outside the container so it survives deleting it. -p 5432:5432 connects my machine's port to Postgres inside the container.
+- Docker: runs programs in isolated containers made from images. A volume keeps data outside the container so it survives deleting it.
 - Unclear / to do:
   - I have only read the test code once. Need to re-read test_events.py and be able to explain each line.
-  - Haven't started the Postgres container yet.
   - The events list still resets whenever the server restarts.
+
+## 2026-11-12 (Day 5)
+
+- Module vs package: a module is one .py file (events.py). A package is a folder of modules with an __init__.py (routers).
+- f-string vs path template: "/{event_id}" in a FastAPI decorator is a plain string that FastAPI reads as a template ("this part of the URL is the variable event_id"). In the tests I build a real URL, so I need f"/events/{event_id}" to put the actual value in. Without the f the literal text {event_id} would be sent and give a 422 (cannot parse as integer), not a 404.
+- APIRouter(prefix, tags): prefix is added to the start of every route path in that router, so it changes the real URLs. tags only groups routes under a heading in /docs and does not change behaviour.
+- __init__.py in routers: marks the folder as a package so "from routers import events" works. Python can sometimes import without it (namespace packages) but it is the convention and tools like pytest expect it. It is only needed in routers because that is the only folder I import from as a package.
+- test_events.py walkthrough: TestClient(app) calls the API in memory. client.post/get/put/delete return a response; .status_code is the number, .json() turns the body into a dictionary. Each assert is a checkpoint and the test fails at the first false one.
+  - test_event_lifecycle: create, read, update, delete, then confirm 404. One long test because each step needs the previous one, and it deletes what it creates.
+  - test_rejects_bad_price: price -5 gives 422. If I removed gt=0, this test would fail because the API would reply 201.
+  - test_unknown_event_is_404: event 99999 gives 404.
+- Why event_id is saved in the lifecycle test: the server assigns the id on create, and I need it to fetch, update and delete that same event.
+- Database concepts (Phase 2, part 1): a table is a named grid for one kind of thing (events), a column is one field with a fixed type, a row is one record, and the primary key (id) is unique per row. Constraints like NOT NULL are rules the database itself enforces, so bad data is refused even if my Python code has a bug (Pydantic guards the front door, constraints guard the vault).
+- SQL: SELECT (read, like GET), INSERT (create, like POST), UPDATE (like PUT), DELETE (like DELETE). WHERE filters rows, * means all columns.
+- Relational: tables are linked with foreign keys, for example a booking stores the id of its event.
+- SQLite vs PostgreSQL: SQLite is a single file with no server, good for small apps (used at bgx). PostgreSQL is a separate server that handles many users safely and is what production apps and job postings use.
+- Unclear / to do:
+  - Have not run the hands-on SQLite experiment yet (create table, insert, select, delete, see that ids are never reused, see NOT NULL refuse a row).
+  - Postgres container in Docker is not started yet.
